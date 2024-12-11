@@ -1,0 +1,39 @@
+# just a simple config file for testing
+VERSION: 1.0
+FOLDER: test/testdata
+TARGETS:
+  A: targetA.pptx
+  A1: targetA1.pptx
+  BZ: targetBZ.pptx
+
+INDEXING:
+  - INDEX: <A:_index>
+    SOURCE: <A:_source>
+  - INDEX: <A1:_i>
+    SOURCE: <A1:_s>
+    CSL: ON
+  - INDEX: <BZ:index>
+    SOURCE: <BZ:source>
+    CSL: True
+
+GENERATING:
+  - GENERATE: <A>
+    SOURCE: <A:_source>
+    INDEX:
+      - <A:_index>
+  - GENERATE: <A1>
+    SOURCE: <A1:_s>
+    INDEX:
+      - <A1:_i>
+  - GENERATE: <BZ>
+    SOURCE: <BZ:source>
+    INDEX:
+      - <BZ:index>
+  - GENERATE: AandA1
+    SOURCE: <A:_source>
+    INDEX:
+      - <A:_index>
+      - <A1:_i>
+      - <BZ:index>
+    CSL: True
+    CSP: True

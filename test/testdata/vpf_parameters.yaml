@@ -1,0 +1,10 @@
+DESCRIPTION: verify_parameter_formats のテストパラメータ
+DATA:
+  - ID: 1
+    PURPOSE: 1ファイルのみの単純な生成
+    SOURCE: vpf/simpleconfig.yaml
+    VERIFIER: vpf/simpleconfig_verifieddump.yaml
+  - ID: 2
+    PURPOSE: 複数ファイルの相互参照を生成する想定
+    SOURCE: vpf/multifileconfig.yaml
+    VERIFIER: vpf/multifileconfig_verifieddump.yaml

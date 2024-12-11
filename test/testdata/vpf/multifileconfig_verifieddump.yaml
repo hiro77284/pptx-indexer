@@ -1,0 +1,43 @@
+VERSION: 1.0
+FOLDER: test/testdata
+TARGETS:
+  A: targetA
+  A1: targetA1
+  BZ: targetBZ
+INDEXING:
+- INDEX: targetA_index
+  SOURCE: targetA_source
+  CSL: false
+- INDEX: targetA1_i
+  SOURCE: targetA1_s
+  CSL: true
+- INDEX: targetBZindex
+  SOURCE: targetBZsource
+  CSL: true
+GENERATING:
+- GENERATE: targetA
+  SOURCE: targetA_source
+  INDEX:
+  - targetA_index
+  CSL: false
+  CSP: false
+- GENERATE: targetA1
+  SOURCE: targetA1_s
+  INDEX:
+  - targetA1_i
+  CSL: false
+  CSP: false
+- GENERATE: targetBZ
+  SOURCE: targetBZsource
+  INDEX:
+  - targetBZindex
+  CSL: false
+  CSP: false
+- GENERATE: AandA1
+  SOURCE: targetA_source
+  INDEX:
+  - targetA_index
+  - targetA1_i
+  - targetBZindex
+  CSL: true
+  CSP: true

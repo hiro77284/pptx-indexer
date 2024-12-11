@@ -1,0 +1,109 @@
+{
+    "WX1": {
+        "index": 1,
+        "slidenumber": 1,
+        "title": "Chapter 1, Page 1   !!S_1!!",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "PG1": {
+                "index": 1,
+                "slidenumber": 1,
+                "title": "Chapter 1, Page 1   !!S_1!!",
+                "notes": "",
+                "summary": ""
+            },
+            "PG2": {
+                "index": 2,
+                "slidenumber": 2,
+                "title": "DT-code in content area !!S_2!!",
+                "notes": "",
+                "summary": ""
+            },
+            "PGA": {
+                "index": 3,
+                "slidenumber": 3,
+                "title": "DT-code without numeric !!S_3!!",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    },
+    "WXB": {
+        "index": 2,
+        "slidenumber": 4,
+        "title": "DT-code without numeric !!S_4!!",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "PGX": {
+                "index": 1,
+                "slidenumber": 4,
+                "title": "DT-code without numeric !!S_4!!",
+                "notes": "",
+                "summary": ""
+            },
+            "PGB": {
+                "index": 2,
+                "slidenumber": 5,
+                "title": "2nd DT-code in the same slide        !!S_6!!",
+                "notes": "",
+                "summary": ""
+            },
+            "PGA": {
+                "index": 3,
+                "slidenumber": 5,
+                "title": "1st DT-code in a slide                       !!S_5!!",
+                "notes": "",
+                "summary": ""
+            },
+            "PG4": {
+                "index": 4,
+                "slidenumber": 6,
+                "title": "chapter and section should be alphanumeric    !!S_7!!",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    },
+    "W": {
+        "index": 3,
+        "slidenumber": 6,
+        "title": "short and long code sample             !!S_8!!",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "longSECTIONcode": {
+                "index": 1,
+                "slidenumber": 6,
+                "title": "short and long code sample             !!S_8!!",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    },
+    "WXD": {
+        "index": 4,
+        "slidenumber": 6,
+        "title": "just a chapter code without section also available  !!S_10!!",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {}
+    },
+    "WXY": {
+        "index": 5,
+        "slidenumber": 7,
+        "title": "101 of digital marketing",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "PG1": {
+                "index": 1,
+                "slidenumber": 7,
+                "title": "101 of digital marketing",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    }
+}

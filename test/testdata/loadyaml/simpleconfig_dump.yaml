@@ -1,0 +1,12 @@
+VERSION: 1.0
+FOLDER: samplefolder
+TARGETS:
+  A: targetA.pptx
+INDEXING:
+- INDEX: <A:_index>
+  SOURCE: <A:_source>
+GENERATING:
+- GENERATE: <A>
+  SOURCE: <A:_source>
+  INDEX:
+  - <A:_index>

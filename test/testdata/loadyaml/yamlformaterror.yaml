@@ -1,0 +1,6 @@
+# yaml file with format error
+FOLDER: samplefolder 
+TARGETS:
+  A: targeta.pptx
+ B: targetb.pptx  # invalid indentation
+

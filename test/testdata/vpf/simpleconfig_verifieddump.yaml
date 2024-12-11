@@ -1,0 +1,16 @@
+# just a simple config file for testing
+VERSION: 1.0
+FOLDER: test/testdata 
+TARGETS:
+  A: targetA
+INDEXING:
+  - INDEX: targetA_index
+    SOURCE: targetA_source
+    CSL: false
+GENERATING:
+  - GENERATE: targetA
+    SOURCE: targetA_source
+    INDEX:
+      - targetA_index
+    CSL: false
+    CSP: false

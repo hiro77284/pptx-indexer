@@ -1,0 +1,18 @@
+VERSION: 1
+FOLDER: D:\DOCS\PythonPjs\PptTextLister\test\testdata\conversion
+TARGETS:
+  A: onefile.pptx
+
+INDEXING:
+  - INDEX: <A:_index>
+    SOURCE: <A:_source>
+    CSL: ON
+
+GENERATING:
+  - GENERATE: <A>
+    SOURCE: <A:_source>
+    INDEX:
+      - <A:_index>
+    CSP: ON
+    CSL: ON
+
