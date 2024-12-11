@@ -10,20 +10,32 @@ pythonの実行環境構築やコマンドライン操作等は自力ででき�
 
 使用例を example/simple ディレクトリに入れてあります。
 
-## 標準的な使用手順は下記の通り。
+## 標準的な使用手順
 
-(1) ソースとなる pptx ファイルを用意する
+### (1) ソースとなる pptx ファイルを用意する
+
  例： example/simple/Example1_source.pptx
 
-(2) パラメータファイルを用意する
+### (2) パラメータファイルを用意する
+
  例： example/simple/simpleExample1.yaml
 
-(3) インデックスを生成する
- 例： $ python3 PpIndexCollector.py example/simple/simpleExample1.yaml
+### (3) インデックスを生成する
+
+ 例：
+ ```shell
+ $ python3 PpIndexCollector.py example/simple/simpleExample1.yaml
+ ```
+
  生成物： example/simple/simpleExample1.json
 
-(4) コンバージョンを行う
- 例： $ python3 PpIndexLabeller.py example/simple/simpleExample1.yaml
+### (4) コンバージョンを行う
+ 
+ 例： 
+ ```shell
+ $ python3 PpIndexLabeller.py example/simple/simpleExample1.yaml
+ ```
+
  生成物： example/simple/Example1.pptx
  （これが最終成果物）
 
