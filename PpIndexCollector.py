@@ -14,6 +14,8 @@ import PpIndexConfig as pic
 from PpIndexCommon import remove_slides
 
 version='0.9'
+logformat='%(message)s'                                     # simple format
+# logformat='%(asctime)s - %(levelname)s - %(message)s'     # standard format
 
 # ロガーの作成
 logger = logging.getLogger(__name__)
@@ -25,12 +27,14 @@ def setLogger(loglevel, logoutput):
     else:
         logger.setLevel(logging.INFO)
 
-    # ログファイルの設定
-    if logoutput.upper() != 'STDOUT':
+    # logoutput が STDOUT の場合は標準出力に、それ以外の場合はファイルに出力
+    if logoutput.upper() == 'STDOUT':
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(logging.Formatter(logformat))
+        logger.addHandler(console_handler)
+    else:
         file_handler = logging.FileHandler(logoutput, 'a')
-        file_handler.setLevel(logging.DEBUG)
-        #file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        file_handler.setFormatter(logging.Formatter('%(message)s'))
+        file_handler.setFormatter(logging.Formatter(logformat))
         logger.addHandler(file_handler)
 
 # 「#DT#FA1) タイトル」 にマッチして FA1 と タイトル を取得
@@ -248,7 +252,8 @@ def main():
         logger.debug(f"indexing:\n  sourcepath:{_sourcepathobj}\n  indexpath:{_indexpathobj}")
         collectandsave_index(_indexing[i], _folderobj)
 
-    logger.info(f"{sys.argv[1]} done.")
+    print(f"finished collecting index information of {args.file}")
+    logger.info(f"finished collecting index information of {args.file}")
 
 
 
@@ -258,7 +263,9 @@ if __name__ == "__main__":
         exit(0)
     except pic.ConfigError as e:
         logger.info(f"ConfigError: {e}")
+        print(f"ConfigError: {e}")
         exit(1)
     except ProcessError as e:
         logger.info(f"ProcessError: {e}")
+        print(f"ProcessError: {e}")
         exit(2)
