@@ -103,7 +103,6 @@ def verify_parameter_formats(configs, dump='', logger=None):
     if logger is None:
         import logging
         logger = logging.getLogger(__name__)
-    # FOLDER がない場合はカレントディレクトリを設定する
 
     # VERSION が存在しないか、最小値以下の場合はエラー
     verify_version(configs, logger)
