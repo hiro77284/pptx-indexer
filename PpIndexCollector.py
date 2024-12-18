@@ -38,11 +38,11 @@ def setLogger(loglevel, logoutput):
         logger.addHandler(file_handler)
 
 # 「#DT#FA1) タイトル」 にマッチして FA1 と タイトル を取得
-level1_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)[^0-9a-zA-Z_.]*\s+(.+)')
+level1_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
 # ↑ 英数字1文字以上、[英数字|アンダースコア|ピリオド]以外の文字0文字以上、空白1文字以上、任意の文字列
 
 # 「#DT#FA1.SZ1) タイトル」 にマッチして FA1 と SZ1 と タイトル を取得
-level2_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)[-.]+([0-9a-zA-Z_]+)[^0-9a-zA-Z_.]*\s+(.+)')
+level2_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)[-.]+([0-9a-zA-Z_]+)([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
 # ↑ 英数字1文字以上、[英数字|アンダースコア]1文字以上、[ハイフン|ピリオド]1文字以上、[英数字|アンダースコア]1文字以上、[英数字|アンダースコア|ピリオド]以外の文字0文字以上、空白1文字以上、任意の文字列
 
 # 「#SUM# コンテンツ」 にマッチして コンテンツを取得
@@ -154,7 +154,7 @@ def collectandsave_index(indexparams, folderobj):
                         logger.debug(ptext)
                     if match1:
                         firstleveltext = match1[0][0]
-                        titletext = match1[0][1]
+                        titletext = match1[0][2]
                         logger.debug(f'match1 first:{firstleveltext} title:{titletext}')
                         logger.debug(f'firstlevelassoc:{firstlevelassoc}')
                         if firstleveltext not in firstlevelassoc:
@@ -164,7 +164,7 @@ def collectandsave_index(indexparams, folderobj):
                     if match2:
                         firstleveltext = match2[0][0]
                         secondleveltext = match2[0][1]
-                        titletext = match2[0][2]
+                        titletext = match2[0][3]
 
                         if firstleveltext not in firstlevelassoc:
                             # エラーをassertする・・・のはやめて、firstlevel を登録して処理続行
