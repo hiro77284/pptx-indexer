@@ -1,8 +1,8 @@
 # 指定した .pptx ファイルからインデックス用コードを抽出し、index ファイルを出力する
 
 from pptx import Presentation
+import win32com.client
 import os
-import sys
 from pathlib import Path
 import argparse
 import re
@@ -82,7 +82,6 @@ def generate_target(genparams,folderobj):
     _generatepptxpath = folderobj / _generatepptx
     logger.debug(f"source:{_sourcepptx} generate:{_generatepptx}")
 
-    # _originpptx を読み込む
     prs = Presentation(_sourcepptxpath)
 
     # 削除対象スライドを削除して、スライド番号マッピング用ハッシュを受け取る key:元のスライド番号 value:新しいスライド番号
@@ -109,15 +108,16 @@ def generate_target(genparams,folderobj):
         for key in indexdata:
             logger.debug(f"key:{key}")
             logger.debug(f"index:{indexdata[key]['index']}")
-            logger.debug(f"slidenumber:{indexdata[key]['slidenumber']}")
-            logger.debug(f"slidenumber:{snummap[indexdata[key]['slidenumber']]}")   # スライド削除後の番号へのマッピング対応
+            #logger.debug(f"slidenumber:{snummap[indexdata[key]['slidenumber']]}")   # スライド削除後の番号へのマッピング対応
+            logger.debug(f"slidenumber:{indexdata[key]['slidenumber']}")            # スライド削除後の番号へのマッピング対応はいったんやめる
             logger.debug(f"title:{indexdata[key]['title']}")
-            # #DT#FA1 を indexdata[key]['index'] で置換するためのデータを作成
+            # #DT#FA1# を indexdata[key]['index'] で置換するためのデータを作成
             replacements = {
                 make_replacetargetSingleKey_reg("DT",key): rf"{indexdata[key]['index']}\g<1>",
                 make_replacetargetSingleKey_reg("RI",key): rf"{indexdata[key]['index']}\g<1>",
                 make_replacetargetSingleKey_reg("RT",key): rf"{indexdata[key]['title']}\g<1>",
-                make_replacetargetSingleKey_reg("RN",key): rf"{snummap[indexdata[key]['slidenumber']]}\g<1>",   # スライド削除後の番号へのマッピング対応
+                #make_replacetargetSingleKey_reg("RN",key): rf"{snummap[indexdata[key]['slidenumber']]}\g<1>",   # スライド削除後の番号へのマッピング対応
+                make_replacetargetSingleKey_reg("RN",key): rf"{indexdata[key]['slidenumber']}\g<1>",                # スライド削除後の番号へのマッピング対応はいったんやめる
                 make_replacetargetSingleKey_reg("RIT",key): rf"{indexdata[key]['index']} {indexdata[key]['title']}\g<1>",
             }
             # print(replacements)
@@ -127,23 +127,28 @@ def generate_target(genparams,folderobj):
             secondlevelassoc = indexdata[key]['secondlevelassoc']
             secondlevelidxtitlelist = ""
             secondlevelslidenumberlist = ""
+            logger.debug(f"secondlevelassoc:{secondlevelassoc}")
+            logger.debug(f"snummap:{snummap}")
             for skey in secondlevelassoc:
                 logger.debug(f"skey:{skey}")
                 logger.debug(f"index:{secondlevelassoc[skey]['index']}")
-                logger.debug(f"slidenumber:{snummap[secondlevelassoc[skey]['slidenumber']]}")
+                #logger.debug(f"slidenumber:{snummap[secondlevelassoc[skey]['slidenumber']]}")
+                logger.debug(f"slidenumber:{secondlevelassoc[skey]['slidenumber']}")        # スライド削除後の番号へのマッピング対応はいったんやめる
                 logger.debug(f"title:{secondlevelassoc[skey]['title']}")
-                # #T#FA1 を indexdata[key]['index'] で置換するためのデータを作成
+                # #T#FA1.S1# を indexdata[key]['index'] で置換するためのデータを作成
                 replacements = {
                     make_replacetargetDualKey_reg("DT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2>",
                     make_replacetargetDualKey_reg("RI",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2>",
                     make_replacetargetDualKey_reg("RT",key, skey): rf"{secondlevelassoc[skey]['title']}\g<2>",
-                    make_replacetargetDualKey_reg("RN",key, skey): rf"{snummap[secondlevelassoc[skey]['slidenumber']]}\g<2>",
+                    #make_replacetargetDualKey_reg("RN",key, skey): rf"{snummap[secondlevelassoc[skey]['slidenumber']]}\g<2>",
+                    make_replacetargetDualKey_reg("RN",key, skey): rf"{secondlevelassoc[skey]['slidenumber']}\g<2>",        # スライド削除後の番号へのマッピング対応はいったんやめる
                     make_replacetargetDualKey_reg("RIT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2> {secondlevelassoc[skey]['title']} ",
                 }
                 # print(replacements)
                 secondlevelreplacements.append(replacements)
                 secondlevelidxtitlelist += f"{indexdata[key]['index']}.{secondlevelassoc[skey]['index']}) {secondlevelassoc[skey]['title']}\n"
-                secondlevelslidenumberlist += f"{snummap[secondlevelassoc[skey]['slidenumber']]}\n"
+                #secondlevelslidenumberlist += f"{snummap[secondlevelassoc[skey]['slidenumber']]}\n"
+                secondlevelslidenumberlist += f"{secondlevelassoc[skey]['slidenumber']}\n"      # スライド削除後の番号へのマッピング対応はいったんやめる
 
             replacements = {
                 make_replacetargetSingleKey_reg("RLISTIT",key): rf"{secondlevelidxtitlelist}\g<1>",
@@ -162,6 +167,8 @@ def generate_target(genparams,folderobj):
     # slidenumber はスライド削除後のスライド番号を保持
     slidenumber=0
 
+    needshapedeletetion = False
+
     for slide in prs.slides:
         logger.debug(f"slidenumber:{slidenumber}")
         slidenumber += 1
@@ -169,33 +176,68 @@ def generate_target(genparams,folderobj):
         for shape in slide.shapes:
             if shape.has_text_frame:
                 tfnumber += 1
-                _shapedeleteflag = False
                 for paragraph in shape.text_frame.paragraphs:
                     for run in paragraph.runs:
-                        # run.text に #CSP# が含まれていたら、そのshapeを削除する
-                        if genparams['CSP'] and re.search(r'#CSP#', run.text):
-                            _shapedeleteflag = True
-                            logger.debug(f"deleting shape:{shape}")
-                            break
+                        # run.text に #CSP# が含まれていたら shape を削除 または #CSP# の文字列のみを削除
+                        if  re.search(r'#CSP#', run.text):
+                            if genparams['CSP']:
+                                needshapedeletetion = True
+                                logger.debug(f"need shape deletion:{shape}")
+                                break
+                            else:
+                                # 正規表現を使って '#CSP#\s?' を削除
+                                replacedtext = re.sub(r'#CSP#\s?', '', run.text)
+                                run.text = replacedtext
+                                continue
+                        
+                        # run.text に #CSL# が含まれていて、genparams['CSL'] がFalseの場合は #CSL# の文字列のみを削除
+                        if  re.search(r'#CSL#', run.text):
+                            if not genparams['CSL']:
+                                # 正規表現を使って '#CSL#\s?' を削除
+                                replacedtext = re.sub(r'#CSL#\s?', '', run.text)
+                                run.text = replacedtext
+                                continue
 
                         # run.text に #CSP# が含まれていない場合は、置換を行う
-                        replacedtext = replace_text(run.text, firstlevelreplacements, secondlevelreplacements,mokujireplacements)
+                        replacedtext = replace_text(run.text, firstlevelreplacements, secondlevelreplacements, mokujireplacements)
                         run.text = replacedtext
-                if _shapedeleteflag:
-                    shape.element.getparent().remove(shape.element)                    
-                    continue
 
-        # logger.debug(f"tfnumber:{tfnumber}")
-
-    # 変更を保存
+    # いったん変更を保存する
     prs.save(_generatepptxpath)
+
+    # シェイプ削除がある場合は pywin32 で削除処理を行う
+    # (python-pptx でXMLエレメントをremoveする方法で削除しようとすると、保存後のpptxを開いたときに
+    # 構成エラーが発生するので、pywin32 を使って削除します。ただしこの方法は遅い)
+    if needshapedeletetion:
+        win32pptapp = win32com.client.Dispatch("Powerpoint.Application")
+        win32prs = win32pptapp.Presentations.Open(str(_generatepptxpath), WithWindow=False)
+        for slide in win32prs.Slides:
+            # 逆順でシェイプをループ（削除中にコレクションを変更しないように）
+            for shape in reversed(list(slide.Shapes)):
+                if shape.HasTextFrame == -1 and shape.TextFrame.HasText:
+                    # テキストの中に #CSP# の文字があれば削除
+                    if "#CSP#" in shape.TextFrame.TextRange.Text:
+                        logger.debug(f"Found #CSP# in text box {shape.TextFrame.TextRange.Text}")
+                        shape.Delete()
+
+        newpptx_path_abs = os.path.abspath(_generatepptxpath)
+        logger.info(f"_generatepptxpath:{_generatepptxpath}")
+        logger.info(f"newpptx_path_abs:{newpptx_path_abs}")
+        win32prs.SaveAs(newpptx_path_abs)
+
+        # プレゼンテーションを閉じる
+        win32prs.Close()
+
+        # PowerPointを閉じる
+        win32pptapp.Quit()
+
+    # generate_target終了
+
 
 
 def make_replacetargetDualKey_reg(tag,key, skey):
     # 「ピリオドまたはハイフンで区切ったキー文字列」の後ろに「非英数文字または空白または文末」が続く場合にマッチ
     return rf"#{tag}#{key}([-.]){skey}([^0-9a-zA-Z_.]|\s|$)"
-    #return rf"#{tag}#{key}([-.]){skey}([^0-9a-zA-Z_.]+|\s|$)"
-    #return rf"#{tag}#{key}([-.]){skey}([^0-9a-zA-Z_.]*\s?$)"
 
 def make_replacetargetSingleKey_reg(tag,key):
     # 「キー文字列」の後ろに「非英数文字または空白または文末」が続く場合にマッチ
