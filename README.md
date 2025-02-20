@@ -4,9 +4,24 @@
 
 PowerPointファイルへの階層的ナンバリングを行う python スクリプトです。
 章・節番号を振りたい部分に特殊なコードを書いた pptx ファイルをソースとして、変換スクリプトをかけることによりその特殊コード部分を章・節番号に変換します。
-目次生成、引用生成も可能です。
 
-### 動作環境
+![自動ナンバリングとは)](./docs/Introduction/slide1.png)
+
+目次生成、引用生成、複数のpptxでの相互参照も可能です。
+
+### 目次生成
+
+![目次生成)](./docs/Introduction/slid8.png)
+
+### 引用生成
+
+![引用生成)](./docs/Introduction/slid10.png)
+
+### 複数のpptxでの相互参照
+
+![複数のpptxでの相互参照)](./docs/Introduction/slid12.png)
+
+## 動作環境
 
 開発は下記環境で行っています。
 
@@ -19,7 +34,7 @@ PowerPointファイルへの階層的ナンバリングを行う python スク�
 
 コマンドラインでpythonスクリプトを起動して使います。
 pythonの実行環境構築やコマンドライン操作等は自力でできることが前提です。
-機能紹介および詳しい使用法は docs/Introduction.pdf をご覧ください。
+機能紹介および詳しい使用法は [Introduction(PDF)](./docs/Introduction.pdf) をご覧ください。
 
 使用例を example/ex1 ディレクトリに入れてあります。
 
@@ -58,7 +73,7 @@ pythonの実行環境構築やコマンドライン操作等は自力ででき�
 
 ## パラメータファイルの書き方
 
-docs/Introduction.pdf の最終ページをご覧ください。
+[Introduction(PDF)](./docs/Introduction.pdf) の最終ページをご覧ください。
 
 ## その他もろもろ
 
