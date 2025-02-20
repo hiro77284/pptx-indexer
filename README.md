@@ -2,6 +2,9 @@
 
 This document and Introduction.pdf will be provided only in Japanese for the time being.
 
+GitHubの使い方にも慣れていないので、改善提案いただけると助かります。
+I'm not yet familiar with how to use GitHub, so I would appreciate any suggestions for improvement.
+
 ## 機能
 
 PowerPointファイルへの階層的ナンバリングを行う python スクリプトです。
