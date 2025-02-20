@@ -11,15 +11,15 @@ PowerPointファイルへの階層的ナンバリングを行う python スク�
 
 ### 目次生成
 
-![目次生成)](./docs/Introduction/slid8.png)
+![目次生成)](./docs/Introduction/slide8.png)
 
 ### 引用生成
 
-![引用生成)](./docs/Introduction/slid10.png)
+![引用生成)](./docs/Introduction/slide10.png)
 
 ### 複数のpptxでの相互参照
 
-![複数のpptxでの相互参照)](./docs/Introduction/slid12.png)
+![複数のpptxでの相互参照)](./docs/Introduction/slide12.png)
 
 ## 動作環境
 
