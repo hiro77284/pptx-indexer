@@ -31,11 +31,11 @@ def do_conversion(data):
     # data["CONFIG"] コンバージョンの設定ファイル
     # data["CONFIG"] を引数にして PpIndexCollector と PpIndexLabeler を実行
     #print(data["CONFIG"])
-    result = subprocess.run(['python', 'PpIndexCollector.py', '--ll=info', '--lf=collector_test.log', data["CONFIG"]], stdout=subprocess.PIPE)
+    result = subprocess.run(['python', 'PpIndexCollector.py', '--loglevel=info', '--logfile=collector_test.log', data["CONFIG"]], stdout=subprocess.PIPE)
     if result.returncode != 0:
         return False
     #print(f"result.stdout={result.stdout}")
-    result = subprocess.run(['python', 'PpIndexLabeler.py', '--ll=info', '--lf=collector_test.log', data["CONFIG"]], stdout=subprocess.PIPE)
+    result = subprocess.run(['python', 'PpIndexLabeler.py', '--loglevel=info', '--logfile=collector_test.log', data["CONFIG"]], stdout=subprocess.PIPE)
     if result.returncode != 0:
         return False
     #print(f"result.stdout={result.stdout}")

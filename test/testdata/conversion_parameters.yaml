@@ -6,9 +6,3 @@ DATA:
     SOURCE: test/testdata/conversion/onefile_source.pptx
     TARGET: test/testdata/conversion/onefile.pptx
     VERIFIER: test/testdata/conversion/onefile_verifier_same.pptx
-  # - ID: 2
-  #   PURPOSE: 失敗するテスト（verifier ファイルを故意に変更してある）
-  #   CONFIG: test/testdata/conversion/onefileconversion.yaml
-  #   SOURCE: test/testdata/conversion/onefile_source.pptx
-  #   TARGET: test/testdata/conversion/onefile.pptx
-  #   VERIFIER: test/testdata/conversion/onefile_verifier_different.pptx

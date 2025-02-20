@@ -5,6 +5,8 @@ TARGETS:
   A: targetA.pptx
 
 INDEXING:
+  # suffix 前の:が2個 :: になっているのがエラー
+  # double colons '::' before suffix causes an error
   - INDEX: <A::_index>
     SOURCE: <A:_source>
 

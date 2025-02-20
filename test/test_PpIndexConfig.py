@@ -10,6 +10,9 @@ logger.setLevel(logging.DEBUG)
 filehandler = logging.FileHandler('test/test.log')
 logger.addHandler(filehandler)
 
+#------------------------------------------------------------
+# ファイル名の拡張子を除去する処理
+# removing extension from a file name
 remove_extension_parameters = [
     ('PowerPointFile.pptx',         # standard target
      'PowerPointFile'),
@@ -29,13 +32,13 @@ remove_extension_parameters = [
      'invalidcharacters +!<>file'),                 # don't care whether or not the characters' validity, just remove the extension
 ]
 
-
-
-# 拡張子を除去する
 def test_remove_extension():
     for target, expected in remove_extension_parameters:
         assert PpIndexConfig.remove_extension(target) == expected
 
+#------------------------------------------------------------
+# ファイル名に拡張子を付加する処理
+# adding extension to a file name
 add_extension_parameters = [
     ('PowerPointFile', 'pptx', 'PowerPointFile.pptx'),
     ('日本語のファイル名', 'pptx', '日本語のファイル名.pptx'),
@@ -45,6 +48,9 @@ def test_add_extension():
     for target, ext, expected in add_extension_parameters:
         assert PpIndexConfig.add_extension(target, ext) == expected
 
+#------------------------------------------------------------
+# ファイル名に拡張子を付加する処理
+# adding extension to a file name
 simple_config={'VERSION': 1.0, 
                'FOLDER': 'test/testdata', 
                'INDEXING': [{'INDEX': 'index1.json', 
@@ -89,7 +95,7 @@ def test_verify_parameter_formats():
     vpfparams = justreadyaml(f'{testdatafolder}/vpf_parameters.yaml')
     for i in range(len(vpfparams["DATA"])):
         configs = PpIndexConfig.load_yaml(f'{testdatafolder}/{vpfparams["DATA"][i]["SOURCE"]}')
-        print('tesging: ', f'{testdatafolder}/{vpfparams["DATA"][i]["PURPOSE"]}')
+        print('testing: ', f'{testdatafolder}/{vpfparams["DATA"][i]["PURPOSE"]}')
         assert PpIndexConfig.verify_parameter_formats(configs, logger=logger) == justreadyaml(f'{testdatafolder}/{vpfparams["DATA"][i]["VERIFIER"]}')
 
   

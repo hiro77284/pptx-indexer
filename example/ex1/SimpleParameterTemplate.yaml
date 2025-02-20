@@ -1,0 +1,14 @@
+VERSION: 1
+FOLDER: example/ex1
+TARGETS:
+  A: Example1.pptx
+
+INDEXING:
+  - INDEX: <A:_index>
+    SOURCE: <A:_source>
+
+GENERATING:
+  - GENERATE: <A>
+    SOURCE: <A:_source>
+    INDEX:
+      - <A:_index>

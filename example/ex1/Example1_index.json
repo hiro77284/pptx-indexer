@@ -1,0 +1,78 @@
+{
+    "CP1": {
+        "index": 1,
+        "slidenumber": 1,
+        "title": "1章1節　章・節コードを章・節番号として変換する",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "SL1": {
+                "index": 1,
+                "slidenumber": 1,
+                "title": "1章1節　章・節コードを章・節番号として変換する",
+                "notes": "",
+                "summary": ""
+            },
+            "SL2": {
+                "index": 2,
+                "slidenumber": 2,
+                "title": "1章2節　コード中の数字とナンバリングは無関係",
+                "notes": "",
+                "summary": ""
+            },
+            "SLX": {
+                "index": 3,
+                "slidenumber": 3,
+                "title": "1章3節　コードには数字を含む必要なし",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    },
+    "CP2": {
+        "index": 2,
+        "slidenumber": 4,
+        "title": "2章1節　節コードは章コード内でナンバリング",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "SLX": {
+                "index": 1,
+                "slidenumber": 4,
+                "title": "2章1節　節コードは章コード内でナンバリング",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    },
+    "CP3": {
+        "index": 3,
+        "slidenumber": 5,
+        "title": "3章　章コードのみの使用",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "SL1": {
+                "index": 1,
+                "slidenumber": 6,
+                "title": "3章1節　コードの終端記号",
+                "notes": "",
+                "summary": ""
+            },
+            "longcode": {
+                "index": 2,
+                "slidenumber": 7,
+                "title": "3章2節　コードの文字数制限なし",
+                "notes": "",
+                "summary": ""
+            },
+            "SL3": {
+                "index": 3,
+                "slidenumber": 8,
+                "title": "タイトルを引用可能",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    }
+}

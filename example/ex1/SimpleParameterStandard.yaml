@@ -1,0 +1,15 @@
+VERSION: 1
+FOLDER: example/ex1
+TARGETS:
+  A: Example1.pptx
+
+INDEXING:
+  - INDEX: Example1_index.json
+    SOURCE: Example1_source.pptx
+
+GENERATING:
+  - GENERATE: Example1.pptx
+    SOURCE: Example1_source.pptx
+    INDEX: 
+      - Example1_index.json
+    CSP: ON

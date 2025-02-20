@@ -1,0 +1,39 @@
+{
+    "FA3": {
+        "index": 1,
+        "slidenumber": 0,
+        "title": "対応関係のある構造",
+        "notes": "",
+        "summary": "",
+        "secondlevelassoc": {
+            "SZ4": {
+                "index": 1,
+                "slidenumber": 0,
+                "title": "対応関係のある構造",
+                "notes": "",
+                "summary": ""
+            },
+            "SZ5": {
+                "index": 2,
+                "slidenumber": 1,
+                "title": "分類のある構造",
+                "notes": "",
+                "summary": ""
+            },
+            "SZ6": {
+                "index": 3,
+                "slidenumber": 2,
+                "title": "最も基本的な構造は分類・対応・順序",
+                "notes": "",
+                "summary": ""
+            },
+            "SZ7": {
+                "index": 4,
+                "slidenumber": 3,
+                "title": "分類・対応・順序は複合します",
+                "notes": "",
+                "summary": ""
+            }
+        }
+    }
+}
