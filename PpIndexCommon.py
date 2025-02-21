@@ -1,8 +1,8 @@
-# PowerPoint(.pptx) ファイル処理の共通関数
-
 from pptx import Presentation
 import logging
 import re
+
+# PowerPoint(.pptx) ファイル処理の共通関数
 
 # ロガーの作成
 logger = logging.getLogger(__name__)

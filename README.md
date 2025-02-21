@@ -1,5 +1,7 @@
 # Hierarchical Indexing and Labeling Tool for PowerPoint Files
 
+This document will be provided only in Japanese for the time being.
+
 ## 機能
 
 PowerPointファイルへの階層的ナンバリングを行う python スクリプトです。
@@ -64,7 +66,7 @@ pythonの実行環境構築やコマンドライン操作等は自力ででき�
  例：
 
  ```shell
- $ python3 PpIndexLabeller.py example/ex1/SimpleParameterStandard.yaml
+ $ python3 PpIndexLabeler.py example/ex1/SimpleParameterStandard.yaml
  finished labeling of example/ex1/SimpleParameterStandard.yaml
  ```
 

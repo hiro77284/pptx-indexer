@@ -1,5 +1,3 @@
-# 指定した .pptx ファイルからインデックス用コードを抽出し、index ファイルを出力する
-
 from pptx import Presentation
 import win32com.client
 import os
@@ -13,7 +11,10 @@ import logging
 import PpIndexConfig as pic
 from PpIndexCommon import remove_slides
 
-version='0.9'
+# 指定した .pptx ファイルとインデックスファイル(.json) を読んでタグを変換する
+
+
+version='1.0'
 logformat='%(message)s'                                     # simple format
 # logformat='%(asctime)s - %(levelname)s - %(message)s'     # standard format
 
@@ -57,17 +58,17 @@ def raiseProcessError_if_not_exists(file_path):
 # コマンドライン引数を解析して返す
 def parse_commandargs():
     # コマンドライン引数のパーサーを作成
-    parser = argparse.ArgumentParser(description="Read and process a YAML file.")
-    # 'file' 引数の定義
-    parser.add_argument("file", help="The YAML file to read")
-    # オプション引数 --ll 、略称 -l,文字型、デフォルトは info を指定
-    parser.add_argument('--ll', '-l', type=str, default='info', help='log level [debug|INFO]')
-    # オプション引数 --lf, 略称 -f,文字型、デフォルトは STDOUT を指定
-    parser.add_argument('--lf', '-f', type=str, default='STDOUT', help='log file')
-    # オプション引数 --dump 、略称 -d,文字型、デフォルトは 空文字列 を指定
-    parser.add_argument('--dump', '-d', type=str, default='', help='dump file name')
+    parser = argparse.ArgumentParser(description="Generates new PowerPoint files with labels converted according to the specified index files.")
+    # yamlファイルで設定を記述する
+    parser.add_argument("yaml", help="YAML configuration file contains transformation parameters.")
+    # ログレベル指定　オプション --ll 、略称 -l,文字型、デフォルトは info
+    parser.add_argument('--loglevel', '-l', type=str, default='info', help='log level [debug|INFO]')
+    # ログファイル指定　オプション --lf, 略称 -f,文字型、デフォルトは STDOUT
+    parser.add_argument('--logfile', '-f', type=str, default='STDOUT', help='path to log file, or STDOUT if omitted')
     # バージョン番号を表示
     parser.add_argument('--version', '-v', action='version', version=f'%(prog)s {version}')
+    # # オプション引数 --dump 、略称 -d,文字型、デフォルトは 空文字列 を指定
+    # parser.add_argument('--dump', '-d', type=str, default='', help='dump file name')
     
     # 引数を解析
     _args = parser.parse_args()
@@ -190,12 +191,13 @@ def generate_target(genparams,folderobj):
                                 run.text = replacedtext
                                 continue
                         
-                        # run.text に #CSL# が含まれていて、genparams['CSL'] がFalseの場合は #CSL# の文字列のみを削除
+                        # run.text に #CSL# が含まれていて、genparams['CSL'] がFalseの場合は #CSL# とそれに続く文字列のみを削除
                         if  re.search(r'#CSL#', run.text):
                             if not genparams['CSL']:
-                                # 正規表現を使って '#CSL#\s?' を削除
-                                replacedtext = re.sub(r'#CSL#\s?', '', run.text)
-                                run.text = replacedtext
+                                needshapedeletetion = True
+                                # 正規表現を使って '#CSL#\s?.*' を削除
+                                #replacedtext = re.sub(r'#CSL#\s?.*', '', run.text)
+                                #run.text = replacedtext
                                 continue
 
                         # run.text に #CSP# が含まれていない場合は、置換を行う
@@ -205,24 +207,27 @@ def generate_target(genparams,folderobj):
     # いったん変更を保存する
     prs.save(_generatepptxpath)
 
+    # 絶対パスでないと win32 アプリでファイルを開けなかったので絶対パス取得
+    newpptx_path_abs = os.path.abspath(_generatepptxpath)
+    logger.debug(f"BEFORE win32 _generatepptxpath:{_generatepptxpath}")
+    logger.debug(f"BEFORE win32 newpptx_path_abs :{newpptx_path_abs}")
+
     # シェイプ削除がある場合は pywin32 で削除処理を行う
     # (python-pptx でXMLエレメントをremoveする方法で削除しようとすると、保存後のpptxを開いたときに
     # 構成エラーが発生するので、pywin32 を使って削除します。ただしこの方法は遅い)
     if needshapedeletetion:
         win32pptapp = win32com.client.Dispatch("Powerpoint.Application")
-        win32prs = win32pptapp.Presentations.Open(str(_generatepptxpath), WithWindow=False)
+        win32prs = win32pptapp.Presentations.Open(str(newpptx_path_abs), WithWindow=False)
         for slide in win32prs.Slides:
             # 逆順でシェイプをループ（削除中にコレクションを変更しないように）
             for shape in reversed(list(slide.Shapes)):
                 if shape.HasTextFrame == -1 and shape.TextFrame.HasText:
                     # テキストの中に #CSP# の文字があれば削除
-                    if "#CSP#" in shape.TextFrame.TextRange.Text:
+                    if "#CSP#" in shape.TextFrame.TextRange.Text or "#CSL#" in shape.TextFrame.TextRange.Text:
                         logger.debug(f"Found #CSP# in text box {shape.TextFrame.TextRange.Text}")
                         shape.Delete()
 
-        newpptx_path_abs = os.path.abspath(_generatepptxpath)
-        logger.info(f"_generatepptxpath:{_generatepptxpath}")
-        logger.info(f"newpptx_path_abs:{newpptx_path_abs}")
+        logger.info(f"saving as newpptx_path_abs:{newpptx_path_abs}")
         win32prs.SaveAs(newpptx_path_abs)
 
         # プレゼンテーションを閉じる
@@ -237,11 +242,11 @@ def generate_target(genparams,folderobj):
 
 def make_replacetargetDualKey_reg(tag,key, skey):
     # 「ピリオドまたはハイフンで区切ったキー文字列」の後ろに「非英数文字または空白または文末」が続く場合にマッチ
-    return rf"#{tag}#{key}([-.]){skey}([^0-9a-zA-Z_.]|\s|$)"
+    return rf"#{tag}#{key}([-.]){skey}#([^0-9a-zA-Z_.]|\s|$)"
 
 def make_replacetargetSingleKey_reg(tag,key):
     # 「キー文字列」の後ろに「非英数文字または空白または文末」が続く場合にマッチ
-    return rf"#{tag}#{key}([^0-9a-zA-Z_.]|\s|$)"
+    return rf"#{tag}#{key}#([^0-9a-zA-Z_.]|\s|$)"
 
 
 
@@ -301,18 +306,18 @@ def main():
     args = parse_commandargs()
 
     # ロガーの設定
-    setLogger(args.ll, args.lf)
+    setLogger(args.loglevel, args.logfile)
 
-    # YAMLファイルを読み込む
-    logger.info( "--------- configuration ---------")
-    configs = pic.verify_parameter_formats(pic.load_yaml(args.file,logger=logger),logger=logger)
-    logger.debug(f"configs: {configs}")
+    # 設定ファイルを読む
+    logger.info( "--------- configuration --------")
+    configs = pic.verify_parameter_formats(pic.load_yaml(args.yaml,logger=logger),logger=logger)
+    logger.info(f"configs: {configs}")
     raiseProcessError_if_not_exists(configs['FOLDER'])
 
     _folder = configs['FOLDER']
     _folderobj = Path(_folder)
 
-    logger.info( "--------- processing---------")
+    logger.info( "----------- processing ---------")
     _generating=configs['GENERATING']   
     for i in range(len(_generating)):
         # _generating[i] のパス名に拡張子を付与、ファイルの存在確認
@@ -341,8 +346,8 @@ def main():
         logger.debug(f"generating:\n  sourcepath:{_sourcepathobj}\n  generatepath:{_generatepathobj}")
         generate_target(_generating[i],_folderobj)
 
-    print(f"finished labeling of {args.file}")
-    logger.info(f"finished labeling of {args.file}")
+    print(f"finished labeling of {args.yaml}")
+    logger.info(f"finished labeling of {args.yaml}")
 
 
 

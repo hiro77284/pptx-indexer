@@ -1,8 +1,5 @@
-# 指定した .pptx ファイルからインデックス用コードを抽出し、index ファイルを出力する
-
 from pptx import Presentation
 import os
-import sys
 from pathlib import Path
 import argparse
 import re
@@ -13,14 +10,16 @@ import logging
 import PpIndexConfig as pic
 from PpIndexCommon import remove_slides
 
-version='0.9'
+# 指定した .pptx ファイルからインデックス用コードを抽出し、index ファイルを出力する
+
+version='1.0'
 logformat='%(message)s'                                     # simple format
 # logformat='%(asctime)s - %(levelname)s - %(message)s'     # standard format
 
 # ロガーの作成
 logger = logging.getLogger(__name__)
 
-def setLogger(loglevel, logoutput):
+def setLogger(loglevel, logpath, logoutput):
     # ログレベルの設定
     if loglevel.upper() == 'DEBUG':
         logger.setLevel(logging.DEBUG)
@@ -33,17 +32,18 @@ def setLogger(loglevel, logoutput):
         console_handler.setFormatter(logging.Formatter(logformat))
         logger.addHandler(console_handler)
     else:
-        file_handler = logging.FileHandler(logoutput, 'a')
+        file_handler = logging.FileHandler(logpath / logoutput, 'a')
         file_handler.setFormatter(logging.Formatter(logformat))
         logger.addHandler(file_handler)
 
 # 「#DT#FA1) タイトル」 にマッチして FA1 と タイトル を取得
-level1_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
+#level1_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
+level1_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)#([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
 # ↑ 英数字1文字以上、[英数字|アンダースコア|ピリオド]以外の文字0文字以上、空白1文字以上、任意の文字列
 
 # 「#DT#FA1.SZ1) タイトル」 にマッチして FA1 と SZ1 と タイトル を取得
-level2_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)[-.]+([0-9a-zA-Z_]+)([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
-# ↑ 英数字1文字以上、[英数字|アンダースコア]1文字以上、[ハイフン|ピリオド]1文字以上、[英数字|アンダースコア]1文字以上、[英数字|アンダースコア|ピリオド]以外の文字0文字以上、空白1文字以上、任意の文字列
+level2_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)[-.]+([0-9a-zA-Z_]+)#([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
+# ↑ 英数字1文字以上、[英数字|アンダースコア]1文字以上、[ハイフン|ピリオド]1文字以上、[英数字|アンダースコア]1文字以上、[英数字|アンダースコア|ピリオド|空白]以外の文字0文字以上、空白1文字以上、任意の文字列
 
 # 「#SUM# コンテンツ」 にマッチして コンテンツを取得
 summary_pattern = re.compile(r'#SUM#\s+(\S.*)')
@@ -75,13 +75,13 @@ def raiseProcessError_if_not_exists(file_path):
 # コマンドライン引数を解析して返す
 def parse_commandargs():
     # コマンドライン引数のパーサーを作成
-    parser = argparse.ArgumentParser(description="Read and process a YAML file.")
+    parser = argparse.ArgumentParser(description="Collects index information from PowerPoint files and outputs them as .json files.")
     # 'file' 引数の定義
-    parser.add_argument("file", help="The YAML file to read")
-    # オプション引数 --ll 、略称 -l,文字型、デフォルトは info を指定
-    parser.add_argument('--ll', '-l', type=str, default='info', help='log level [debug|INFO]')
-    # オプション引数 --lf, 略称 -f,文字型、デフォルトは STDOUT を指定
-    parser.add_argument('--lf', '-f', type=str, default='STDOUT', help='log file')
+    parser.add_argument("yaml", help="YAML configuration file contains transformation parameters.")
+    # ログレベル指定　オプション --ll 、略称 -l,文字型、デフォルトは info
+    parser.add_argument('--loglevel', '-l', type=str, default='info', help='log level [debug|INFO]')
+    # ログファイル指定　オプション --lf, 略称 -f,文字型、デフォルトは STDOUT
+    parser.add_argument('--logfile', '-f', type=str, default='STDOUT', help='path to log file, or STDOUT if omitted')
     # オプション引数 --dump 、略称 -d,文字型、デフォルトは 空文字列 を指定
     parser.add_argument('--dump', '-d', type=str, default='', help='dump file name')
     # バージョン番号を表示
@@ -148,8 +148,8 @@ def collectandsave_index(indexparams, folderobj):
                     for run in paragraph.runs:
                         ptext += run.text
                     #logger.debug(ptext)
-                    match1 = level1_pattern.findall(ptext)
-                    match2 = level2_pattern.findall(ptext)
+                    match1 = level1_pattern.findall(ptext)      # 'FA1) タイトル' にマッチ
+                    match2 = level2_pattern.findall(ptext)      # 'FA1.SZ1) タイトル' にマッチ
                     if match1 or match2:
                         logger.debug(ptext)
                     if match1:
@@ -167,17 +167,25 @@ def collectandsave_index(indexparams, folderobj):
                         titletext = match2[0][3]
 
                         if firstleveltext not in firstlevelassoc:
+                            #　1階層目の定義がないまま2階層目が出現した場合は、1階層目を追加して処理を続行
                             # エラーをassertする・・・のはやめて、firstlevel を登録して処理続行
                             #assert False, f'firstleveltext:{firstleveltext} is not found in firstlevelassoc'
                             addfirstlevel(firstleveltext, titletext, notes_text, summary_text)
-                            secondlevelnumber =0
+                            secondlevelnumber =0    # 1階層目が追加されたので、2階層目のインデックスをリセット
 
                         # 1階層目で持っている連想配列をいったん取得
                         secondlevelassoc = firstlevelassoc[firstleveltext]['secondlevelassoc']
                         logger.debug(f"secondlevelassoc:{secondlevelassoc}")
                         if secondleveltext not in secondlevelassoc:
+                            # 2階層目としてまだ出現していない文字列なら、既存のsecondlevelnumber + 1 で登録
+                            logger.debug("secondleveltext not found in secondlevelassoc")
+                            # ↓既存の2階層目のインデックスのリストを取得
+                            secondlevelnumber_values = [secondlevelassoc[secondleveltext]['index'] for secondleveltext in secondlevelassoc if 'index' in secondlevelassoc[secondleveltext]]
+                            logger.debug('secondlevelnumber_values:' + ', '.join(str(num) for num in secondlevelnumber_values))
+
                             secondlevelassoc[secondleveltext] = {}
-                            secondlevelnumber += 1
+                            # secondlevelnumber += 1
+                            secondlevelnumber =  max(secondlevelnumber_values) + 1 if secondlevelnumber_values else 1   # 既存の最大値 + 1 で登録
                             # ↓1階層目の値を記録
                             secondlevelassoc[secondleveltext]['index'] = secondlevelnumber
                             secondlevelassoc[secondleveltext]['slidenumber'] = slidenumber
@@ -219,16 +227,19 @@ def main():
     args = parse_commandargs()
 
     # ロガーの設定
-    setLogger(args.ll, args.lf)
+    # setLogger(args.ll, args.lf)
 
     # YAMLファイルを読み込む
     logger.info( "--------- configuration ---------")
-    configs = pic.verify_parameter_formats(pic.load_yaml(args.file, dump=args.dump, logger=logger), logger=logger)
+    configs = pic.verify_parameter_formats(pic.load_yaml(args.yaml, dump=args.dump, logger=logger), logger=logger)
     logger.debug(f"configs: {configs}")
     raiseProcessError_if_not_exists(configs['FOLDER'])
 
     _folder = configs['FOLDER']
     _folderobj = Path(_folder)
+
+    # ロガーの設定
+    setLogger(args.loglevel, _folderobj ,  args.logfile)
 
     logger.info( "--------- processing---------")
     _indexing=configs['INDEXING']   
@@ -252,8 +263,8 @@ def main():
         logger.debug(f"indexing:\n  sourcepath:{_sourcepathobj}\n  indexpath:{_indexpathobj}")
         collectandsave_index(_indexing[i], _folderobj)
 
-    print(f"finished collecting index information of {args.file}")
-    logger.info(f"finished collecting index information of {args.file}")
+    print(f"finished collecting index information of {args.yaml}")
+    logger.info(f"finished collecting index information of {args.yaml}")
 
 
 

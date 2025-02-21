@@ -1,9 +1,8 @@
-# 指定した .pptx ファイルからインデックス用コードを抽出し、index ファイルを出力する
-
 import os
 import yaml
 import re
 
+# 設定ファイル読込関係処理
 
 # 設定ファイル内のファイル名置換用正規表現
 __pattern_with_key_suffix = re.compile(r'<([A-Za-z][0-9A-Za-z_]*):([0-9A-Za-z_]+)>')
