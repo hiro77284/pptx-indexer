@@ -1,6 +1,9 @@
 # Hierarchical Indexing and Labeling Tool for PowerPoint Files
 
-This document will be provided only in Japanese for the time being.
+This document and Introduction.pdf will be provided only in Japanese for the time being.
+
+GitHubの使い方にも慣れていないので、改善提案いただけると助かります。
+I'm not yet familiar with how to use GitHub, so I would appreciate any suggestions for improvement.
 
 ## 機能
 
@@ -8,6 +11,8 @@ PowerPointファイルへの階層的ナンバリングを行う python スク�
 章・節番号を振りたい部分に特殊なコードを書いた pptx ファイルをソースとして、変換スクリプトをかけることによりその特殊コード部分を章・節番号に変換します。
 
 ![自動ナンバリングとは)](./docs/Introduction/slide1.png)
+
+機能紹介および詳しい使用法は [Introduction(PDF)](./docs/Introduction.pdf) をご覧ください。
 
 目次生成、引用生成、複数のpptxでの相互参照も可能です。
 
