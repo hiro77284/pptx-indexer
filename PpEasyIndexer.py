@@ -1,4 +1,5 @@
-#指定したPowerPointファイルの#DT#タグに終端符号を付加する
+#!/usr/bin/env python   # PowerPoint Easy Numbering tool
+# -*- coding: utf-8 -*- 
 
 from pptx import Presentation
 import os
@@ -6,7 +7,10 @@ import re
 import argparse
 import win32com.client
 
-from PpIndexCommon import remove_slides
+from PpIndexCommon import remove_slides, replace_CSLandCSP
+
+#指定したPowerPointファイルを読み込み、章番号と節番号を付与して新しいファイルを生成します。
+#章番号は #CHAPT# 、節番号は #SECTION# という文字列をスライドのタイトルに含むことで判別します。
 
 matchchapt=r'#CHAPT#'
 matchsect=r'#SECTION#'
@@ -159,30 +163,11 @@ def modify_slide_titles(file_path,sldskip=0):
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
                     for run in paragraph.runs:
-                        # run.text に #CSP# が含まれていたら shape を削除 または #CSP# の文字列のみを削除
-                        if  re.search(r'#CSP#', run.text):
-                            if deletecsp:
-                                needshapedeletetion = True
-                                print(f"need shape deletion:{run.text}")
-                                break
-                            else:
-                                # 正規表現を使って '#CSP#\s?' を削除
-                                replacedtext = re.sub(r'#CSP#\s?', '', run.text)
-                                run.text = replacedtext
-                                continue
-                        
-                        # run.text に #CSL# が含まれている場合、deletecsl がFalseの場合は #CSL# とそれに続く文字列のみを削除
-                        if  re.search(r'#CSL#', run.text):
-                            if deletecsl:
-                                # ページ削除は既に済んでいるのでここでは特にやることはない
-                                break
-                            else:
-                                # ページ削除をしない場合は #CSL# とそれに続く文字列のみを削除
-                                print(f"need text deletion:{run.text}")
-                                # 正規表現を使って '#CSL#\s?.*' を削除
-                                replacedtext = re.sub(r'#CSL#\s?.*', '', run.text)
-                                run.text = replacedtext
-                                continue
+                        tobreak, _needshapedeletetion = replace_CSLandCSP(run, deletecsl, deletecsp)
+                        if _needshapedeletetion:
+                            needshapedeletetion = True
+                        if tobreak: # このシェイプの残りの run は処理不要
+                            break
 
     # 新しいファイル名を生成
     base_name, ext = os.path.splitext(file_path)

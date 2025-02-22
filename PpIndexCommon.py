@@ -46,3 +46,38 @@ def remove_slides(prs, deletion):
 
     return snummap
 
+
+def replace_CSLandCSP(run, deletecsl, deletecsp):
+    # run.text に #CSP# が含まれていたら shape を削除 または #CSP# の文字列のみを削除
+    tobreak = False
+    needshapedeletetion = False
+    if  re.search(r'#CSP#', run.text):
+        if deletecsp:
+            needshapedeletetion = True
+            logger.debug(f"need shape deletion:{run.text}")
+            # このシェイプは後にまるごと削除されるので、
+            # 呼び出し元に戻った後の replace_text が実行不要、
+            # run の残りの処理も不要なので tobreak=True にしておく
+            tobreak = True
+        else:
+            # 正規表現を使って '#CSP#\s?' を削除
+            replacedtext = re.sub(r'#CSP#\s?', '', run.text)
+            run.text = replacedtext
+            #continue
+    
+    # run.text に #CSL# が含まれていて、genparams['CSL'] がFalseの場合は #CSL# とそれに続く文字列のみを削除
+    if  re.search(r'#CSL#', run.text):
+        if deletecsl:
+            # ページ削除は既に済んでいるのでここでは特にやることはない
+            # というか実際にはここには来ないので下の tobreak=True は dead code だが、
+            # 呼び出し元に戻った後の replace_text が実行不要、
+            # run の残りの処理も不要なことを明示するために残しておく
+            tobreak = True
+        else:
+            # ページ削除をしない場合は #CSL# とそれに続く文字列のみを削除
+            # 正規表現を使って '#CSL#\s?.*' を削除
+            replacedtext = re.sub(r'#CSL#\s?.*', '', run.text)
+            run.text = replacedtext
+            #continue
+
+    return tobreak, needshapedeletetion

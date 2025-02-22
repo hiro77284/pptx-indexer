@@ -9,7 +9,7 @@ import json
 import logging
 
 import PpIndexConfig as pic
-from PpIndexCommon import remove_slides
+from PpIndexCommon import remove_slides, replace_CSLandCSP
 
 # 指定した .pptx ファイルとインデックスファイル(.json) を読んでタグを変換する
 
@@ -179,31 +179,13 @@ def generate_target(genparams,folderobj):
                 tfnumber += 1
                 for paragraph in shape.text_frame.paragraphs:
                     for run in paragraph.runs:
-                        # run.text に #CSP# が含まれていたら shape を削除 または #CSP# の文字列のみを削除
-                        if  re.search(r'#CSP#', run.text):
-                            if genparams['CSP']:
-                                needshapedeletetion = True
-                                logger.debug(f"need shape deletion:{run.text}")
-                                break
-                            else:
-                                # 正規表現を使って '#CSP#\s?' を削除
-                                replacedtext = re.sub(r'#CSP#\s?', '', run.text)
-                                run.text = replacedtext
-                                continue
-                        
-                        # run.text に #CSL# が含まれていて、genparams['CSL'] がFalseの場合は #CSL# とそれに続く文字列のみを削除
-                        if  re.search(r'#CSL#', run.text):
-                            if genparams['CSL']:
-                                # ページ削除は既に済んでいるのでここでは特にやることはない
-                                break
-                            else:
-                                # ページ削除をしない場合は #CSL# とそれに続く文字列のみを削除
-                                # 正規表現を使って '#CSL#\s?.*' を削除
-                                replacedtext = re.sub(r'#CSL#\s?.*', '', run.text)
-                                run.text = replacedtext
-                                continue
+                        tobreak, _needshapedeletetion = replace_CSLandCSP(run, genparams['CSL'], genparams['CSP'])
+                        if _needshapedeletetion:
+                            needshapedeletetion = True
+                        if tobreak:
+                            break
 
-                        # run.text に #CSP# が含まれていない場合は、置換を行う
+                        # run.text の置換を行う
                         replacedtext = replace_text(run.text, firstlevelreplacements, secondlevelreplacements, mokujireplacements)
                         run.text = replacedtext
 
