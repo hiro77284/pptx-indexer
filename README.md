@@ -59,7 +59,7 @@ pythonの実行環境構築やコマンドライン操作等は自力ででき�
 
 ### (1) ソースとなる pptx ファイルを用意する
 
- 例： example/ex1/Example1_source.pptx
+ 例： example/ex1/PptxIndexerExample1_source.pptx
 
 ### (2) パラメータファイルを用意する
 
@@ -74,7 +74,7 @@ pythonの実行環境構築やコマンドライン操作等は自力ででき�
  finished collecting index information of example/ex1/SimpleParameterStandard.yaml
  ```
 
- 生成物： example/ex1/Example1_index.json
+ 生成物： example/ex1/PptxIndexerExample1_index.json
 
 ### (4) コンバージョンを行う
 
@@ -85,7 +85,7 @@ pythonの実行環境構築やコマンドライン操作等は自力ででき�
  finished labeling of example/ex1/SimpleParameterStandard.yaml
  ```
 
- 生成物： example/ex1/Example1.pptx
+ 生成物： example/ex1/PptxIndexerExample1.pptx
  （これが最終成果物）
 
 ## パラメータファイルの書き方
