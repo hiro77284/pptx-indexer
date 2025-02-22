@@ -1,5 +1,5 @@
 VERSION: 1
-FOLDER: D:\DOCS\PythonPjs\PptTextLister\test\testdata\conversion
+FOLDER: test\testdata\conversion
 TARGETS:
   A: onefile.pptx
 

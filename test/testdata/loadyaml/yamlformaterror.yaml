@@ -1,4 +1,5 @@
 # yaml file with format error
+VERSION: 1.0
 FOLDER: samplefolder 
 TARGETS:
   A: targeta.pptx

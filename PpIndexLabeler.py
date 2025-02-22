@@ -183,7 +183,7 @@ def generate_target(genparams,folderobj):
                         if  re.search(r'#CSP#', run.text):
                             if genparams['CSP']:
                                 needshapedeletetion = True
-                                logger.debug(f"need shape deletion:{shape}")
+                                logger.debug(f"need shape deletion:{run.text}")
                                 break
                             else:
                                 # 正規表現を使って '#CSP#\s?' を削除
@@ -193,11 +193,14 @@ def generate_target(genparams,folderobj):
                         
                         # run.text に #CSL# が含まれていて、genparams['CSL'] がFalseの場合は #CSL# とそれに続く文字列のみを削除
                         if  re.search(r'#CSL#', run.text):
-                            if not genparams['CSL']:
-                                needshapedeletetion = True
+                            if genparams['CSL']:
+                                # ページ削除は既に済んでいるのでここでは特にやることはない
+                                break
+                            else:
+                                # ページ削除をしない場合は #CSL# とそれに続く文字列のみを削除
                                 # 正規表現を使って '#CSL#\s?.*' を削除
-                                #replacedtext = re.sub(r'#CSL#\s?.*', '', run.text)
-                                #run.text = replacedtext
+                                replacedtext = re.sub(r'#CSL#\s?.*', '', run.text)
+                                run.text = replacedtext
                                 continue
 
                         # run.text に #CSP# が含まれていない場合は、置換を行う
@@ -222,7 +225,7 @@ def generate_target(genparams,folderobj):
             # 逆順でシェイプをループ（削除中にコレクションを変更しないように）
             for shape in reversed(list(slide.Shapes)):
                 if shape.HasTextFrame == -1 and shape.TextFrame.HasText:
-                    # テキストの中に #CSP# の文字があれば削除
+                    # テキストの中に #CSP# または #CSL# の文字があれば削除
                     if "#CSP#" in shape.TextFrame.TextRange.Text or "#CSL#" in shape.TextFrame.TextRange.Text:
                         logger.debug(f"Found #CSP# in text box {shape.TextFrame.TextRange.Text}")
                         shape.Delete()

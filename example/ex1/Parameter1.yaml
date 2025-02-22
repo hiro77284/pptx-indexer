@@ -1,0 +1,14 @@
+VERSION: 1
+FOLDER: example/ex1
+TARGETS:
+  A: Introduction.pptx
+
+INDEXING:
+  - INDEX: Introduction_index.json
+    SOURCE: Introduction_source.pptx
+
+GENERATING:
+  - GENERATE: Introduction.pptx
+    SOURCE: Introduction_source.pptx
+    INDEX: 
+      - Introduction_index.json

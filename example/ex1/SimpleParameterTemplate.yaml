@@ -1,7 +1,7 @@
 VERSION: 1
 FOLDER: example/ex1
 TARGETS:
-  A: Example1.pptx
+  A: PptxIndexerExample1.pptx
 
 INDEXING:
   - INDEX: <A:_index>
