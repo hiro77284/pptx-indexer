@@ -10,9 +10,19 @@ I'm not yet familiar with how to use GitHub, so I would appreciate any suggestio
 PowerPointファイルへの階層的ナンバリングを行う python スクリプトです。
 章・節番号を振りたい部分に特殊なコードを書いた pptx ファイルをソースとして、変換スクリプトをかけることによりその特殊コード部分を章・節番号に変換します。
 
+ごく簡単な設定で章節番号付与だけができる簡易版と、設定に手間がかかるものの相互参照が可能な高機能版があります。
+
+### 簡易版　PpEasyIndexer
+
+相互参照が不要で、章・節のナンバリングだけできればよい、という場合は超簡易版 PpEasyIndexer が使えます。章とびらにあたるページのどこかに特殊タグを埋め込むだけの最小限の操作でナンバリングが可能です。機能紹介及び詳しい使用法は  [EasyIndexer_Introduction(PDF)](./docs/EasyIndexer_Introduction.pdf) をご覧ください。
+
+### 高機能版　PpIndexCollector および PpIndexLabeler
+
+複数のPPTX間で相互参照が可能な高機能版です。
+
 ![自動ナンバリングとは)](./docs/Introduction/slide1.png)
 
-機能紹介および詳しい使用法は [Introduction(PDF)](./docs/Introduction.pdf) をご覧ください。
+機能紹介および詳しい使用法は [PptxIndexer_Introduction(PDF)](./docs/PptxIndexer_Introduction.pdf) をご覧ください。
 
 目次生成、引用生成、複数のpptxでの相互参照も可能です。
 
@@ -41,7 +51,7 @@ PowerPointファイルへの階層的ナンバリングを行う python スク�
 
 コマンドラインでpythonスクリプトを起動して使います。
 pythonの実行環境構築やコマンドライン操作等は自力でできることが前提です。
-機能紹介および詳しい使用法は [Introduction(PDF)](./docs/Introduction.pdf) をご覧ください。
+機能紹介および詳しい使用法は [PptxIndexer_Introduction(PDF)](./docs/PptxIndexer_Introduction.pdf) をご覧ください。
 
 使用例を example/ex1 ディレクトリに入れてあります。
 
@@ -80,7 +90,7 @@ pythonの実行環境構築やコマンドライン操作等は自力ででき�
 
 ## パラメータファイルの書き方
 
-[Introduction(PDF)](./docs/Introduction.pdf) の最終ページをご覧ください。
+[PptxIndexer_Introduction(PDF)](./docs/PptxIndexer_Introduction.pdf) の最終ページをご覧ください。
 
 ## その他もろもろ
 
