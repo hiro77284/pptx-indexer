@@ -14,7 +14,7 @@ from PpIndexCommon import remove_slides, replace_CSLandCSP
 # 指定した .pptx ファイルとインデックスファイル(.json) を読んでタグを変換する
 
 
-version='1.0'
+version='1.1'
 logformat='%(message)s'                                     # simple format
 # logformat='%(asctime)s - %(levelname)s - %(message)s'     # standard format
 
@@ -117,9 +117,11 @@ def generate_target(genparams,folderobj):
                 make_replacetargetSingleKey_reg("DT",key): rf"{indexdata[key]['index']}\g<1>",
                 make_replacetargetSingleKey_reg("RI",key): rf"{indexdata[key]['index']}\g<1>",
                 make_replacetargetSingleKey_reg("RT",key): rf"{indexdata[key]['title']}\g<1>",
+                make_replacetargetSingleKey_all_reg("RST",key): rf"{indexdata[key]['title']}\g<1>",
                 #make_replacetargetSingleKey_reg("RN",key): rf"{snummap[indexdata[key]['slidenumber']]}\g<1>",   # スライド削除後の番号へのマッピング対応
                 make_replacetargetSingleKey_reg("RN",key): rf"{indexdata[key]['slidenumber']}\g<1>",                # スライド削除後の番号へのマッピング対応はいったんやめる
                 make_replacetargetSingleKey_reg("RIT",key): rf"{indexdata[key]['index']} {indexdata[key]['title']}\g<1>",
+                make_replacetargetSingleKey_all_reg("RSIT",key): rf"{indexdata[key]['index']} {indexdata[key]['title']}\g<1>",
             }
             # print(replacements)
             firstlevelreplacements.append(replacements)
@@ -141,9 +143,11 @@ def generate_target(genparams,folderobj):
                     make_replacetargetDualKey_reg("DT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2>",
                     make_replacetargetDualKey_reg("RI",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2>",
                     make_replacetargetDualKey_reg("RT",key, skey): rf"{secondlevelassoc[skey]['title']}\g<2>",
+                    make_replacetargetDualKey_all_reg("RST",key, skey): rf"{secondlevelassoc[skey]['title']}\g<2>",
                     #make_replacetargetDualKey_reg("RN",key, skey): rf"{snummap[secondlevelassoc[skey]['slidenumber']]}\g<2>",
                     make_replacetargetDualKey_reg("RN",key, skey): rf"{secondlevelassoc[skey]['slidenumber']}\g<2>",        # スライド削除後の番号へのマッピング対応はいったんやめる
                     make_replacetargetDualKey_reg("RIT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2> {secondlevelassoc[skey]['title']} ",
+                    make_replacetargetDualKey_all_reg("RSIT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2> {secondlevelassoc[skey]['title']} ",
                 }
                 # print(replacements)
                 secondlevelreplacements.append(replacements)
@@ -185,9 +189,16 @@ def generate_target(genparams,folderobj):
                         if tobreak:
                             break
 
+                    cutoff = False
+                    for run in paragraph.runs:
                         # run.text の置換を行う
-                        replacedtext = replace_text(run.text, firstlevelreplacements, secondlevelreplacements, mokujireplacements)
-                        run.text = replacedtext
+                        if cutoff :
+                            # #RST# または #RSIT# があったらそれに続くテキストは削除
+                            run.text = ""
+                        else:
+                            (replacedtext, cutoff) = replace_text(run.text, firstlevelreplacements, secondlevelreplacements, mokujireplacements)
+                            run.text = replacedtext
+
 
     # いったん変更を保存する
     prs.save(_generatepptxpath)
@@ -226,12 +237,22 @@ def generate_target(genparams,folderobj):
 
 
 def make_replacetargetDualKey_reg(tag,key, skey):
-    # 「ピリオドまたはハイフンで区切ったキー文字列」の後ろに「非英数文字または空白または文末」が続く場合にマッチ
+    # 「ピリオドまたはハイフンで区切ったキー文字列」の後ろに # と「非英数文字または空白または文末」が続く場合にマッチ
     return rf"#{tag}#{key}([-.]){skey}#([^0-9a-zA-Z_.]|\s|$)"
 
 def make_replacetargetSingleKey_reg(tag,key):
-    # 「キー文字列」の後ろに「非英数文字または空白または文末」が続く場合にマッチ
+    # 「キー文字列」の後ろに # と「非英数文字または空白または文末」が続く場合にマッチ
     return rf"#{tag}#{key}#([^0-9a-zA-Z_.]|\s|$)"
+
+def make_replacetargetDualKey_all_reg(tag,key, skey):
+    # 「ピリオドまたはハイフンで区切ったキー文字列」の後ろに # と「任意の文字列または文末」が続く場合にマッチ
+    # "#RITS#CHAP.SECT# タイトル文字列" のようなタグを後のタイトル文字列も含めて置換する用途に使う
+    return rf"#{tag}#{key}([-.]){skey}#.?(.*|$)"
+
+def make_replacetargetSingleKey_all_reg(tag,key):
+    # 「キー文字列」の後ろに # と「任意の文字列または文末」が続く場合にマッチ
+    # "#RITS#CHAP# タイトル文字列" のようなタグを後のタイトル文字列も含めて置換する用途に使う
+    return rf"#{tag}#{key}#.?(.*|$)"
 
 
 
@@ -239,13 +260,16 @@ def make_replacetargetSingleKey_reg(tag,key):
 # text に対して firstlevel と secondlevel の置換を行う
 def replace_text(text, first, second,mokuji):
     # text に #\w+# が含まれない場合はそのまま返す
+    cutoff = False
     if not re.search(r'#\w+#', text):
-        return text
+        return (text, cutoff)
     
     for replacements in second:
         for target, replacement in replacements.items():
             #logger.debug(f"searching text:{text} target:{target} replacement:{replacement}")
             if re.search(target, text):
+                if re.search(r'#RST#', text) or re.search(r'#RSIT#', text):
+                    cutoff = True
                 replacedtext = textreplacewrapper_reg(text, target, replacement)
                 logger.debug(f"replacing text:{text} target:{target} replacement:{replacement}")
                 logger.debug(f"  replacedtext:{replacedtext}")
@@ -255,6 +279,8 @@ def replace_text(text, first, second,mokuji):
         for target, replacement in replacements.items():
             #logger.debug(f"searching text:{text} target:{target} replacement:{replacement}")
             if re.search(target, text):
+                if re.search(r'#RST#', text) or re.search(r'#RSIT#', text):
+                    cutoff = True
                 replacedtext = textreplacewrapper_reg(text, target, replacement)
                 logger.debug(f"replacing text:{text} target:{target} replacement:{replacement}")
                 logger.debug(f"  replacedtext:{replacedtext}")
@@ -264,12 +290,14 @@ def replace_text(text, first, second,mokuji):
         for target, replacement in replacements.items():
             #logger.debug(f"searching text:{text} target:{target} replacement:{replacement}")
             if re.search(target, text):
+                if re.search(r'#RST#', text) or re.search(r'#RSIT#', text):
+                    cutoff = True
                 replacedtext = textreplacewrapper_reg(text, target, replacement)
                 logger.debug(f"replacing text:{text} target:{target} replacement:{replacement}")
                 logger.debug(f"  replacedtext:{replacedtext}")
                 text = replacedtext
 
-    return text
+    return (text,cutoff)
 
 
 # text に対して target を replacement に置換する
