@@ -114,10 +114,12 @@ def modify_slide_titles(file_path,sldskip=0):
         if startchapter and startsection:    
             # 両方発見されたので、章・節番号切り替わりの処理をする
             chaptnumber+=1  # 章番号をインクリメント
-            sectnumber=0    # 節番号をリセット（このスライドから1にする）
+            sectnumber=1    # 節番号をリセット（このスライドから1にする）
             insection=True  # 次スライド以降はstartchapter,startsection未該当でも節が継続する
-            newtitle = chaptnumpat
+            newtitle = sectnumpat
             newtitle = newtitle.replace('#CHAPTNUM#',str(chaptnumber))
+            newtitle = newtitle.replace('#DELM#',delimitter)
+            newtitle = newtitle.replace('#SECTNUM#',str(sectnumber))
             newtitle = newtitle.replace('#SEPA#',separator)
             newtitle = newtitle.replace('#CONTENT#',title)
 
@@ -189,7 +191,7 @@ def modify_slide_titles(file_path,sldskip=0):
         win32pptapp = win32com.client.Dispatch("Powerpoint.Application")
         win32prs = win32pptapp.Presentations.Open(str(newpptx_path_abs), WithWindow=False)
         for slide in win32prs.Slides:
-            # 逆順でシェイプをループ（削除中にコレクションを変更しないように）
+            # 逆順でシェイプをループ（削除中にコレクションを変更しないように・・・まあ逆順じゃなくても大丈夫なようですが）
             for shape in reversed(list(slide.Shapes)):
                 if shape.HasTextFrame == -1 and shape.TextFrame.HasText:
                     # テキストの中に #CSP# または #CSL# の文字があれば削除
