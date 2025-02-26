@@ -65,6 +65,15 @@ def replace_CSLandCSP(run, deletecsl, deletecsp):
             run.text = replacedtext
             #continue
     
+    # run.text に #TEMP# が含まれていたら shape を削除
+    if  re.search(r'#TEMP#', run.text):
+        needshapedeletetion = True
+        logger.debug(f"need shape deletion:{run.text}")
+        # このシェイプは後にまるごと削除されるので、
+        # 呼び出し元に戻った後の replace_text が実行不要、
+        # run の残りの処理も不要なので tobreak=True にしておく
+        tobreak = True
+    
     # run.text に #CSL# が含まれていて、genparams['CSL'] がFalseの場合は #CSL# とそれに続く文字列のみを削除
     if  re.search(r'#CSL#', run.text):
         if deletecsl:

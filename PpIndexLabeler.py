@@ -218,10 +218,11 @@ def generate_target(genparams,folderobj):
             # 逆順でシェイプをループ（削除中にコレクションを変更しないように）
             for shape in reversed(list(slide.Shapes)):
                 if shape.HasTextFrame == -1 and shape.TextFrame.HasText:
-                    # テキストの中に #CSP# または #CSL# の文字があれば削除
-                    if "#CSP#" in shape.TextFrame.TextRange.Text or "#CSL#" in shape.TextFrame.TextRange.Text:
+                    # テキストの中に #CSP# または #TEMP# または #CSL# の文字があれば削除
+                    if "#CSP#" in shape.TextFrame.TextRange.Text or "#TEMP#" in shape.TextFrame.TextRange.Text or "#CSL#" in shape.TextFrame.TextRange.Text:
                         logger.debug(f"Found #CSP# in text box {shape.TextFrame.TextRange.Text}")
                         shape.Delete()
+#                    pass
 
         logger.info(f"saving as newpptx_path_abs:{newpptx_path_abs}")
         win32prs.SaveAs(newpptx_path_abs)
@@ -230,7 +231,7 @@ def generate_target(genparams,folderobj):
         win32prs.Close()
 
         # PowerPointを閉じる
-        win32pptapp.Quit()
+        # win32pptapp.Quit()
 
     # generate_target終了
 
