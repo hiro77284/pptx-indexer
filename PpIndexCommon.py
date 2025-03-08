@@ -1,14 +1,14 @@
 from pptx import Presentation
 import logging
 import re
+from pathlib import Path
 
 # PowerPoint(.pptx) ファイル処理の共通関数
 
-# ロガーの作成
-logger = logging.getLogger(__name__)
 
 
-def remove_slides(prs, deletion):
+def remove_slides(prs, deletion,logger):
+    logger.info(f"remove_slides:deletion:{deletion}")
     snummap = {}    
 
     _snums_to_remove = ()   # 削除するスライドID
@@ -47,10 +47,11 @@ def remove_slides(prs, deletion):
     return snummap
 
 
-def replace_CSLandCSP(run, deletecsl, deletecsp):
+def replace_CSLandCSP(run, deletecsl, deletecsp,logger):
     # run.text に #CSP# が含まれていたら shape を削除 または #CSP# の文字列のみを削除
     tobreak = False
     needshapedeletetion = False
+    logger.debug(f'delecsl:{deletecsl},deletecsp:{deletecsp}')
     if  re.search(r'#CSP#', run.text):
         if deletecsp:
             needshapedeletetion = True
@@ -66,7 +67,7 @@ def replace_CSLandCSP(run, deletecsl, deletecsp):
             #continue
     
     # run.text に #TEMP# が含まれていたら shape を削除
-    if  re.search(r'#TEMP#', run.text):
+    if  re.search(r'#TEMP#', run.text) or re.search(r'#MEMO#', run.text):
         needshapedeletetion = True
         logger.debug(f"need shape deletion:{run.text}")
         # このシェイプは後にまるごと削除されるので、
@@ -90,3 +91,48 @@ def replace_CSLandCSP(run, deletecsl, deletecsp):
             #continue
 
     return tobreak, needshapedeletetion
+
+
+
+# 対象ファイル読み込みエラー、書き込みエラーなど
+class ProcessError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(message)
+
+    def __str__(self):
+        return f"ProcessError: {self.message}"
+
+
+def generate_source_and_target_filename( args, default_source_trailer, default_target_trailer,logger):
+    # 指定されたファイル名に .pptx がなければ追加する
+    logger.debug(f'args.file:{args.file}')
+    logger.debug(f'default_source_trailer:{default_source_trailer}')
+    logger.debug(f'default_target_trailer:{default_target_trailer}')
+
+    sourcefile_path = Path(args.file)
+    if not sourcefile_path.suffix:
+        sourcefile_path = sourcefile_path.with_suffix('.pptx')
+
+    # sourcefile_path をもとに targetfile_path を生成するのでいったん targetfile_path に sourcefile_path をコピー
+    targetfile_path = sourcefile_path
+
+    # remove_source_trailer が指定されていて、
+    # args.file の stem が default_source_trailer で終わっていれば除去する
+    if args.remove_source_trailer:
+        if targetfile_path.stem.endswith(default_source_trailer):
+            targetfile_path = targetfile_path.with_stem(targetfile_path.stem[:-len(default_source_trailer)])
+
+    # sourcefile_path に target_trailer を追加して targetfile_path にする
+    target_trailer = args.target_trailer if args.target_trailer else default_target_trailer
+    targetfile_path = targetfile_path.with_stem(f"{targetfile_path.stem}{target_trailer}")
+
+    # targetfile_path と sourcefile_path が同じ場合は エラーとする
+    if targetfile_path == sourcefile_path:
+        # 実際は default_target_trailer ='' と書き換えない限りこれは起こらない
+        raise ProcessError('ソースファイルとターゲットファイルが同じです')
+
+    return sourcefile_path, targetfile_path
+
+    # この段階で sourcefile_path と targetfile_path が確定している
+    

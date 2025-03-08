@@ -4,15 +4,17 @@ from pathlib import Path
 import argparse
 import re
 import json
-
+import sys
 import logging
 
 import PpIndexConfig as pic
-from PpIndexCommon import remove_slides
+from PpIndexCommon import remove_slides, ProcessError
 
 # 指定した .pptx ファイルからインデックス用コードを抽出し、index ファイルを出力する
 
-version='1.0'
+default_target_trailer='_generated'    # 生成されるファイル名に付加する文字列
+
+version='1.2'
 logformat='%(message)s'                                     # simple format
 # logformat='%(asctime)s - %(levelname)s - %(message)s'     # standard format
 
@@ -28,13 +30,14 @@ def setLogger(loglevel, logpath, logoutput):
 
     # logoutput が STDOUT の場合は標準出力に、それ以外の場合はファイルに出力
     if logoutput.upper() == 'STDOUT':
-        console_handler = logging.StreamHandler()
+        console_handler = logging.StreamHandler(stream=sys.stdout)
         console_handler.setFormatter(logging.Formatter(logformat))
         logger.addHandler(console_handler)
     else:
         file_handler = logging.FileHandler(logpath / logoutput, 'a')
         file_handler.setFormatter(logging.Formatter(logformat))
         logger.addHandler(file_handler)
+
 
 # 「#DT#FA1) タイトル」 にマッチして FA1 と タイトル を取得
 #level1_pattern = re.compile(r'#DT#([0-9a-zA-Z_]+)([^0-9a-zA-Z_.\s]+|\s?)\s+(.+)')
@@ -56,15 +59,6 @@ slidenumber = 0             # スライド番号をカウントする
 
 
 
-# 対象ファイル読み込みエラー、書き込みエラーなど
-class ProcessError(Exception):
-    def __init__(self, message):
-        self.message = message
-        super().__init__(message)
-
-    def __str__(self):
-        return f"ProcessError: {self.message}"
-
 
 # ファイル/フォルダーが存在しない場合にエラーを発生させる
 def raiseProcessError_if_not_exists(file_path):
@@ -76,17 +70,26 @@ def raiseProcessError_if_not_exists(file_path):
 def parse_commandargs():
     # コマンドライン引数のパーサーを作成
     parser = argparse.ArgumentParser(description="Collects index information from PowerPoint files and outputs them as .json files.")
-    # 'file' 引数の定義
-    parser.add_argument("yaml", help="YAML configuration file contains transformation parameters.")
+    # ----------------------------------------------
+    # yaml指定時とpptx単独指定時に共通する引数の定義
+    parser.add_argument("file", help="PPTX source file or YAML configuration file. Extensions can be omitted.")
     # ログレベル指定　オプション --ll 、略称 -l,文字型、デフォルトは info
     parser.add_argument('--loglevel', '-l', type=str, default='info', help='log level [debug|INFO]')
     # ログファイル指定　オプション --lf, 略称 -f,文字型、デフォルトは STDOUT
     parser.add_argument('--logfile', '-f', type=str, default='STDOUT', help='path to log file, or STDOUT if omitted')
-    # オプション引数 --dump 、略称 -d,文字型、デフォルトは 空文字列 を指定
-    parser.add_argument('--dump', '-d', type=str, default='', help='dump file name')
     # バージョン番号を表示
     parser.add_argument('--version', '-v', action='version', version=f'%(prog)s {version}')
-    
+    # オプション引数 --dump 、略称 -d,文字型、デフォルトは 空文字列 を指定
+    parser.add_argument('--dump', '-d', type=str, default='', help='dump file name')
+
+    # ----------------------------------------------
+    # pptx単独指定時用の定義
+    parser.add_argument('--powerpoint', '-pp', action='store_true', help='indicates the file as PowerPoint source file.')
+    parser.add_argument('--target-trailer', '-tt', type=str,  default=default_target_trailer ,help='string appended to the generated file name')
+    parser.add_argument('--deletecsl', '-csl', action='store_true', help='delete slides containing #CSL#')
+    parser.add_argument('--deletecsp', '-csp', action='store_true', help='delete shapes containing #CSP#')
+
+
     # 引数を解析
     _args = parser.parse_args()
     return _args
@@ -109,7 +112,7 @@ def collectandsave_index(indexparams, folderobj):
     prs = Presentation(_sourcepptxpath)
 
     # 削除対象スライドを削除して、スライド番号マッピング用ハッシュを受け取る key:元のスライド番号 value:新しいスライド番号
-    snummap = remove_slides(prs, indexparams['CSL'])
+    snummap = remove_slides(prs, indexparams['CSL'],logger)
 
     firstlevelassoc = {}
     firstlevelnumber = 0
@@ -126,7 +129,6 @@ def collectandsave_index(indexparams, folderobj):
         if slide.has_notes_slide:
             notes = slide.notes_slide
             notes_text = notes.notes_text_frame.text
-            print(notes_text)
 
         # 先にサマリーを取得
         for shape in slide.shapes:
@@ -221,53 +223,75 @@ def addfirstlevel(firstleveltext, titletext, notes_text,summary_text):
     logger.debug(firstlevelassoc)
 
 
-
-# メイン処理
-def main():
-    args = parse_commandargs()
-
-    # ロガーの設定
-    # setLogger(args.ll, args.lf)
-
-    # YAMLファイルを読み込む
-    logger.info( "--------- configuration ---------")
-    configs = pic.verify_parameter_formats(pic.load_yaml(args.yaml, dump=args.dump, logger=logger), logger=logger)
-    logger.debug(f"configs: {configs}")
-    raiseProcessError_if_not_exists(configs['FOLDER'])
-
-    _folder = configs['FOLDER']
-    _folderobj = Path(_folder)
-
-    # ロガーの設定
-    setLogger(args.loglevel, _folderobj ,  args.logfile)
-
-    logger.info( "--------- processing---------")
-    _indexing=configs['INDEXING']   
-    for i in range(len(_indexing)):
+def indexing_process(indexingarray, folderobj):
+    for i in range(len(indexingarray)):
         # _indexing[i] のパス名に拡張子を付与、ファイルの存在確認
-        logger.debug(f"indexing: {_indexing[i]}")
-        _index = pic.add_extension(pic.remove_extension(_indexing[i]['INDEX']), 'json')
-        _indexing[i]['INDEX'] = _index
-        _indexpathobj = _folderobj / _index
+        logger.debug(f"indexing: {indexingarray[i]}")
+        _index = pic.add_extension(pic.remove_extension(indexingarray[i]['INDEX']), 'json')
+        indexingarray[i]['INDEX'] = _index
+        _indexpathobj = folderobj / _index
         if os.path.exists(_indexpathobj):
             # _indexpath のファイルが既に存在したら警告
             logger.info(f"Warning: overwriting existing index file: {_indexpathobj}")
 
-        _source = pic.add_extension(pic.remove_extension(_indexing[i]['SOURCE']), 'pptx')
-        _indexing[i]['SOURCE'] = _source
-        _sourcepathobj = _folderobj / _source
+        _source = pic.add_extension(pic.remove_extension(indexingarray[i]['SOURCE']), 'pptx')
+        indexingarray[i]['SOURCE'] = _source
+        _sourcepathobj = folderobj / _source
         # _sourcepath のファイルが存在しなかったらエラー
         raiseProcessError_if_not_exists(_sourcepathobj)
 
         # インデックス生成処理をする
         logger.debug(f"indexing:\n  sourcepath:{_sourcepathobj}\n  indexpath:{_indexpathobj}")
-        collectandsave_index(_indexing[i], _folderobj)
-
-    print(f"finished collecting index information of {args.yaml}")
-    logger.info(f"finished collecting index information of {args.yaml}")
+        collectandsave_index(indexingarray[i], folderobj)
 
 
+# メイン処理
+def main():
+    args = parse_commandargs()
 
+    if args.powerpoint:
+
+        # 単独指定された pptx のフォルダーを取得
+        _folder = Path(args.file).parent
+        _folderobj = Path(_folder)
+
+        # args.file からファイル名のみ取得する
+        sourcefilename = Path(args.file).name
+
+        # ロガーの設定
+        setLogger(args.loglevel, _folderobj ,  args.logfile)
+
+        _indexingarray=[
+            {'SOURCE':sourcefilename, 
+             'INDEX':pic.add_extension(pic.remove_extension(sourcefilename), 'json'), 
+             'CSL': args.deletecsl },
+             ]
+        indexing_process(_indexingarray, _folderobj)
+        logger.info(f"finished collecting index information of {args.file}")
+
+    else:
+        # YAMLファイルを読み込む
+        configs = pic.verify_parameter_formats(pic.load_yaml(args.file, dump=args.dump, logger=logger), logger=logger)
+        raiseProcessError_if_not_exists(configs['FOLDER'])
+
+        _folder = configs['FOLDER']
+        _folderobj = Path(_folder)
+
+        # ロガーの設定
+        setLogger(args.loglevel, _folderobj ,  args.logfile)
+
+        logger.info( "--------- Collector configuration --------")
+        logger.info(f"configs: {configs}")
+
+        logger.info( "----------- Collector  processing ---------")
+        _indexingarray=configs['INDEXING']   
+        indexing_process(_indexingarray, _folderobj)
+
+        logger.info(f"finished collecting index information of {args.file}")
+
+
+#----------------------------------------------
+# メイン処理
 if __name__ == "__main__":
     try:
         main()
