@@ -253,7 +253,7 @@ def make_replacetargetSingleKey_reg(tag,key):
 def make_replacetargetDualKey_all_reg(tag,key, skey):
     # 「ピリオドまたはハイフンで区切ったキー文字列」の後ろに # と「任意の文字列または文末」が続く場合にマッチ
     # "#RITS#CHAP.SECT# タイトル文字列" のようなタグを後のタイトル文字列も含めて置換する用途に使う
-    return rf"#{tag}#{key}([-.]){skey}#.?(.*|$)"
+    return rf"#{tag}#{key}([-.]){skey}#(.?)(.*|$)"
 
 def make_replacetargetSingleKey_all_reg(tag,key):
     # 「キー文字列」の後ろに # と「任意の文字列または文末」が続く場合にマッチ

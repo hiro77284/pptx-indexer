@@ -5,7 +5,7 @@ from pathlib import Path
 
 # PowerPoint(.pptx) ファイル処理の共通関数
 
-
+class CSLfound(Exception): pass
 
 def remove_slides(prs, deletion,logger):
     logger.info(f"remove_slides:deletion:{deletion}")
@@ -17,18 +17,25 @@ def remove_slides(prs, deletion,logger):
     for slide in prs.slides:
         _sdelflag=False     # このスライドは削除するよフラグ
         snummap[_sourcesnum] = _newsnum
-        for shape in slide.shapes:
-            if shape.has_text_frame:
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs:
-                        # run.text に #CSL# が含まれていたら、そのslideをまるごと削除する
-                        if deletion :
-                            if re.search(r'#CSL#', run.text):
-                                # 削除するスライド番号を _sid_to_remove に追加
-                                _snums_to_remove += (_sourcesnum,)
-                                logger.debug(f"deleting slide:{_sourcesnum}")
-                                _sdelflag=True
-                                break
+        try:
+            # スライド内の全シェイプを探索し、#CSL# が１つでもあったら削除対象スライドとして予約する
+            for shape in slide.shapes:
+                if shape.has_text_frame:
+                    for paragraph in shape.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            # run.text に #CSL# が含まれていたら、そのslideをまるごと削除する
+                            if deletion :
+                                if re.search(r'#CSL#', run.text):
+                                    # 複数のCLSタグがあることを想定し、最初のタグで全シェイプの探索を終了する
+                                    raise CSLfound
+        except CSLfound:
+            # 削除するスライド番号を _sid_to_remove に追加
+            _snums_to_remove += (_sourcesnum,)
+            logger.debug(f"deleting slide:{_sourcesnum}")
+            _sdelflag=True
+            pass
+
+        # スライド削除フラグが立っていたらスライドを削除する
         if not _sdelflag:
             _newsnum += 1
         _sourcesnum += 1
