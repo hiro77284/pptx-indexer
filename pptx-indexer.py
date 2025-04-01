@@ -22,7 +22,7 @@ available_tagsregex = ['#CHAPT#', '#DT#']
 title_content_separator_EI=') '
 number_delimiter_EI='.'
 
-pptx_indexer_version='1.2.1'               # バージョン番号   
+pptx_indexer_version='1.3.0'               # バージョン番号   
 indexer_logformat='%(message)s'     # simple format
 # ロガーの作成
 indexer_logger = logging.getLogger(__name__)

@@ -156,23 +156,25 @@ def collectandsave_index(indexparams, folderobj):
                         logger.debug(ptext)
                     if match1:
                         firstleveltext = match1[0][0]
+                        separator = match1[0][1]
                         titletext = match1[0][2]
                         logger.debug(f'match1 first:{firstleveltext} title:{titletext}')
                         logger.debug(f'firstlevelassoc:{firstlevelassoc}')
                         if firstleveltext not in firstlevelassoc:
-                            addfirstlevel(firstleveltext, titletext, notes_text, summary_text)
+                            addfirstlevel(firstleveltext, separator, titletext, notes_text, summary_text)
                             secondlevelnumber =0
 
                     if match2:
                         firstleveltext = match2[0][0]
                         secondleveltext = match2[0][1]
+                        separator = match2[0][2]
                         titletext = match2[0][3]
 
                         if firstleveltext not in firstlevelassoc:
                             #　1階層目の定義がないまま2階層目が出現した場合は、1階層目を追加して処理を続行
                             # エラーをassertする・・・のはやめて、firstlevel を登録して処理続行
                             #assert False, f'firstleveltext:{firstleveltext} is not found in firstlevelassoc'
-                            addfirstlevel(firstleveltext, titletext, notes_text, summary_text)
+                            addfirstlevel(firstleveltext, separator, titletext, notes_text, summary_text)
                             secondlevelnumber =0    # 1階層目が追加されたので、2階層目のインデックスをリセット
 
                         # 1階層目で持っている連想配列をいったん取得
@@ -191,6 +193,7 @@ def collectandsave_index(indexparams, folderobj):
                             # ↓1階層目の値を記録
                             secondlevelassoc[secondleveltext]['index'] = secondlevelnumber
                             secondlevelassoc[secondleveltext]['slidenumber'] = slidenumber
+                            secondlevelassoc[secondleveltext]['separator'] = separator
                             secondlevelassoc[secondleveltext]['title'] = titletext
                             secondlevelassoc[secondleveltext]['notes'] = notes_text
                             secondlevelassoc[secondleveltext]['summary'] = summary_text
@@ -198,22 +201,27 @@ def collectandsave_index(indexparams, folderobj):
 
                         logger.debug(f'match2 first:{firstleveltext} second:{secondleveltext} title:{titletext}')
 
+        logger.debug("-1-----------------------------------------------")
         slidenumber += 1
 
+    logger.debug("-2-----------------------------------------------")
 
     logger.debug(firstlevelassoc)
 
+    logger.debug(f"indexing:\n  sourcepath:{_sourcepptxpath}\n  indexpath:{_indexjsonpath}")
     with open(_indexjsonpath, 'w', encoding='utf-8') as f:
         json.dump(firstlevelassoc, f, ensure_ascii=False, indent=4)
+        logger.debug(f"index file saved: {_indexjsonpath}")
 
 
-def addfirstlevel(firstleveltext, titletext, notes_text,summary_text):
+def addfirstlevel(firstleveltext, separator, titletext, notes_text, summary_text):
     global firstlevelassoc, firstlevelnumber, slidenumber
     firstlevelnumber += 1
     firstlevelassoc[firstleveltext] = {}
     # ↓1階層目の値を記録
     firstlevelassoc[firstleveltext]['index'] = firstlevelnumber
     firstlevelassoc[firstleveltext]['slidenumber'] = slidenumber
+    firstlevelassoc[firstleveltext]['separator'] = separator
     firstlevelassoc[firstleveltext]['title'] = titletext
     firstlevelassoc[firstleveltext]['notes'] = notes_text
     firstlevelassoc[firstleveltext]['summary'] = summary_text
@@ -242,7 +250,13 @@ def indexing_process(indexingarray, folderobj):
 
         # インデックス生成処理をする
         logger.debug(f"indexing:\n  sourcepath:{_sourcepathobj}\n  indexpath:{_indexpathobj}")
-        collectandsave_index(indexingarray[i], folderobj)
+        try:
+            collectandsave_index(indexingarray[i], folderobj)
+        except Exception as e:
+            logger.error(f"Error collecting index from {_sourcepathobj}: {e}")
+            raise ProcessError(f"Error collecting index from {_sourcepathobj}: {e}")
+
+        logger.debug("-3-----------------------------------------------")
 
 
 # メイン処理

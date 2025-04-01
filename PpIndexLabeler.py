@@ -109,6 +109,8 @@ def generate_target(genparams,folderobj):
         # #RT# 参照部　タイトル
         # #RN# 参照部　スライド番号
         # #RIT# 参照部　インデックスとタイトル
+        # #RST# 参照部　タイトル、(後続の文字列も含めて置換する)
+        # #RSIT# 参照部　インデックスとタイトル、(後続の文字列も含めて置換する)
         # firstlevel の置換パターンを作成
         for key in indexdata:
             logger.debug(f"key:{key}")
@@ -124,8 +126,8 @@ def generate_target(genparams,folderobj):
                 make_replacetargetSingleKey_all_reg("RST",key): rf"{indexdata[key]['title']}\g<1>",
                 #make_replacetargetSingleKey_reg("RN",key): rf"{snummap[indexdata[key]['slidenumber']]}\g<1>",   # スライド削除後の番号へのマッピング対応
                 make_replacetargetSingleKey_reg("RN",key): rf"{indexdata[key]['slidenumber']}\g<1>",                # スライド削除後の番号へのマッピング対応はいったんやめる
-                make_replacetargetSingleKey_reg("RIT",key): rf"{indexdata[key]['index']} {indexdata[key]['title']}\g<1>",
-                make_replacetargetSingleKey_all_reg("RSIT",key): rf"{indexdata[key]['index']} {indexdata[key]['title']}\g<1>",
+                make_replacetargetSingleKey_reg("RIT",key): rf"{indexdata[key]['index']}{indexdata[key]['separator']} {indexdata[key]['title']}\g<1>",
+                make_replacetargetSingleKey_all_reg("RSIT",key): rf"{indexdata[key]['index']}{indexdata[key]['separator']} {indexdata[key]['title']}\g<1>",
             }
             # print(replacements)
             firstlevelreplacements.append(replacements)
@@ -150,8 +152,8 @@ def generate_target(genparams,folderobj):
                     make_replacetargetDualKey_all_reg("RST",key, skey): rf"{secondlevelassoc[skey]['title']}\g<2>",
                     #make_replacetargetDualKey_reg("RN",key, skey): rf"{snummap[secondlevelassoc[skey]['slidenumber']]}\g<2>",
                     make_replacetargetDualKey_reg("RN",key, skey): rf"{secondlevelassoc[skey]['slidenumber']}\g<2>",        # スライド削除後の番号へのマッピング対応はいったんやめる
-                    make_replacetargetDualKey_reg("RIT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2> {secondlevelassoc[skey]['title']} ",
-                    make_replacetargetDualKey_all_reg("RSIT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}\g<2> {secondlevelassoc[skey]['title']} ",
+                    make_replacetargetDualKey_reg("RIT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}{secondlevelassoc[skey]['separator']} {secondlevelassoc[skey]['title']} ",
+                    make_replacetargetDualKey_all_reg("RSIT",key, skey): rf"{indexdata[key]['index']}\g<1>{secondlevelassoc[skey]['index']}{secondlevelassoc[skey]['separator']} {secondlevelassoc[skey]['title']} ",
                 }
                 # print(replacements)
                 secondlevelreplacements.append(replacements)
@@ -203,6 +205,30 @@ def generate_target(genparams,folderobj):
                         else:
                             (replacedtext, cutoff) = replace_text(run.text, firstlevelreplacements, secondlevelreplacements, mokujireplacements)
                             run.text = replacedtext
+
+            #- 0401 -----------------------------------------------------------------------
+            # 表内のテキストを置換する
+            if shape.has_table:
+                table = shape.table
+                for row in table.rows:
+                    for cell in row.cells:
+                        # セル内のテキストを置換
+                        for paragraph in cell.text_frame.paragraphs:
+                            for run in paragraph.runs:
+                                tobreak, _needshapedeletetion = replace_CSLandCSP(run, genparams['CSL'], genparams['CSP'],logger)
+                                if _needshapedeletetion:
+                                    needshapedeletion = True
+                                if tobreak:
+                                    break
+                            cutoff = False
+                            for run in paragraph.runs:
+                                if cutoff :
+                                    # #RST# または #RSIT# があったらそれに続くテキストは削除
+                                    run.text = ""
+                                else:
+                                    (replacedtext, cutoff) = replace_text(run.text, firstlevelreplacements, secondlevelreplacements, mokujireplacements)
+                                    run.text = replacedtext
+            #- 0401 -----------------------------------------------------------------------
 
 
     # いったん変更を保存する
